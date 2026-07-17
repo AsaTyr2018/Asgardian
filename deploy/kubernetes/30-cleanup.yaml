@@ -23,7 +23,7 @@ spec:
           securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
           containers:
             - name: cleanup
-              image: ghcr.io/example/asgardian-backend:0.4.0-arm64
+              image: ghcr.io/example/asgardian-backend:0.4.2-arm64
               imagePullPolicy: IfNotPresent
               command: ["asgardian-cleanup"]
               envFrom: [{ secretRef: { name: asgardian-runtime } }]

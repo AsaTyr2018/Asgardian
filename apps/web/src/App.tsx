@@ -1,5 +1,6 @@
 import { CSSProperties, DragEvent, FormEvent, Fragment, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
+  cancelGeneration,
   createVideo,
   createWall,
   deleteSavedAsset,
@@ -7,6 +8,7 @@ import {
   GenerationFormat,
   loadAsset,
   loadSavedAsset,
+  pruneQueue,
   saveGeneration,
   SavedAsset,
   subscribeWall,
@@ -64,6 +66,8 @@ export function App() {
   const [animateTarget, setAnimateTarget] = useState<SavedAsset | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SavedAsset | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [pruning, setPruning] = useState(false);
+  const [cancellingJobs, setCancellingJobs] = useState<Set<string>>(new Set());
   const [motionPrompt, setMotionPrompt] = useState("");
   const [videoSubmitting, setVideoSubmitting] = useState(false);
   const [prompt, setPrompt] = useState("");
@@ -210,6 +214,38 @@ export function App() {
     }
   };
 
+  const cancelJob = async (job: Generation) => {
+    if (!wall || !["queued", "running"].includes(job.status) || cancellingJobs.has(job.id)) return;
+    setCancellingJobs((current) => new Set(current).add(job.id));
+    setError(null);
+    try {
+      await cancelGeneration(wall, job);
+      setJobs((current) => current.filter((item) => item.id !== job.id));
+    } catch (reason) {
+      setError(`Could not cancel this job: ${String(reason)}`);
+    } finally {
+      setCancellingJobs((current) => {
+        const next = new Set(current);
+        next.delete(job.id);
+        return next;
+      });
+    }
+  };
+
+  const pruneActiveQueue = async () => {
+    if (!wall || activeCount === 0 || pruning) return;
+    setPruning(true);
+    setError(null);
+    try {
+      await pruneQueue(wall);
+      setJobs((current) => current.filter((job) => job.status !== "queued" && job.status !== "running"));
+    } catch (reason) {
+      setError(`Could not prune queue: ${String(reason)}`);
+    } finally {
+      setPruning(false);
+    }
+  };
+
   const runBatch = async (request: LastRequest) => {
     if (!wall || submitting) return;
     setSubmitting(true);
@@ -310,7 +346,16 @@ export function App() {
           <button className={view === "main" ? "active" : ""} onClick={() => setView("main")}>Main <b>{jobs.length}</b></button>
           <button className={view === "saved" ? "active" : ""} onClick={() => setView("saved")}>Saved <b>{savedAssets.length}</b></button>
         </nav>
-        <div className="session-state"><i className={wall ? "online" : ""} />{wall ? "Engine ready" : "Opening…"}</div>
+        <div className="topbar-actions">
+          {view === "main" && <button
+            type="button"
+            className="prune-queue"
+            disabled={!wall || activeCount === 0 || pruning}
+            title="Cancel all queued and running jobs on this wall"
+            onClick={pruneActiveQueue}
+          >{pruning ? "Pruning…" : "Prune queue"}<b>{activeCount}</b></button>}
+          <div className="session-state"><i className={wall ? "online" : ""} />{wall ? "Engine ready" : "Opening…"}</div>
+        </div>
       </header>
 
       {view === "main" ? (
@@ -328,6 +373,11 @@ export function App() {
                   {job.status === "succeeded" && <div className="tile-actions">
                     <button type="button" onClick={() => useResult(job)}>Iterate</button>
                     <button type="button" className={savedGenerationIds.has(job.id) ? "saved" : ""} onClick={() => saveResult(job)}>{savedGenerationIds.has(job.id) ? "Saved" : "Save"}</button>
+                  </div>}
+                  {(job.status === "queued" || job.status === "running") && <div className="tile-actions">
+                    <button type="button" className="danger" disabled={cancellingJobs.has(job.id)} onClick={() => cancelJob(job)}>
+                      {cancellingJobs.has(job.id) ? "Cancelling…" : "Kill job"}
+                    </button>
                   </div>}
                   {job.status === "failed" && <em>{job.error_message ?? "Generation failed"}</em>}
                 </div>

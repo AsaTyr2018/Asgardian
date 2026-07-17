@@ -8,6 +8,7 @@ vi.mock("./api", async () => {
   const actual = await vi.importActual<typeof import("./api")>("./api");
   return {
     ...actual,
+    cancelGeneration: vi.fn(),
     createVideo: vi.fn(),
     createWall: vi.fn(),
     deleteSavedAsset: vi.fn(),
@@ -17,6 +18,7 @@ vi.mock("./api", async () => {
     listVideos: vi.fn(),
     loadAsset: vi.fn(),
     loadSavedAsset: vi.fn(),
+    pruneQueue: vi.fn(),
     subscribeWall: vi.fn(),
     submitGeneration: vi.fn(),
   };
@@ -98,6 +100,70 @@ describe("Asgardian main wall", () => {
       expect(api.submitGeneration).toHaveBeenCalledWith(wall, "Replacement prompt", null, "square", 8),
     );
     expect(prompt).toHaveValue("Replacement prompt");
+  });
+
+  it("cancels a single queued wall job", async () => {
+    const queued: api.Generation = {
+      id: "queued-job",
+      batch_id: null,
+      wall_id: wall.id,
+      status: "queued",
+      mode: "text_to_image",
+      generation_format: "square",
+      prompt: "Waiting raven",
+      seed: 1,
+      created_at: "2026-07-16T00:00:00Z",
+      completed_at: null,
+      result_url: null,
+      thumbnail_url: null,
+      download_url: null,
+      width: null,
+      height: null,
+      error_message: null,
+    };
+    vi.mocked(api.createWall).mockResolvedValue(wall);
+    vi.mocked(api.listGenerations).mockResolvedValue([queued]);
+    vi.mocked(api.listSavedAssets).mockResolvedValue([]);
+    vi.mocked(api.cancelGeneration).mockResolvedValue();
+
+    render(<App />);
+
+    await screen.findByText("queued");
+    fireEvent.click(screen.getByRole("button", { name: /kill job/i }));
+
+    await waitFor(() => expect(api.cancelGeneration).toHaveBeenCalledWith(wall, queued));
+  });
+
+  it("prunes all active wall jobs from the topbar", async () => {
+    const running: api.Generation = {
+      id: "running-job",
+      batch_id: null,
+      wall_id: wall.id,
+      status: "running",
+      mode: "text_to_image",
+      generation_format: "square",
+      prompt: "Running raven",
+      seed: 1,
+      created_at: "2026-07-16T00:00:00Z",
+      completed_at: null,
+      result_url: null,
+      thumbnail_url: null,
+      download_url: null,
+      width: null,
+      height: null,
+      error_message: null,
+    };
+    vi.mocked(api.createWall).mockResolvedValue(wall);
+    vi.mocked(api.listGenerations).mockResolvedValue([running]);
+    vi.mocked(api.listSavedAssets).mockResolvedValue([]);
+    vi.mocked(api.pruneQueue).mockResolvedValue(1);
+
+    render(<App />);
+
+    await screen.findByText("running");
+    fireEvent.click(screen.getByRole("button", { name: /prune queue/i }));
+
+    await waitFor(() => expect(api.pruneQueue).toHaveBeenCalledWith(wall));
   });
 
   it("selects a generation format from the three-button dropdown", async () => {

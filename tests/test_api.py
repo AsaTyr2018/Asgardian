@@ -170,6 +170,54 @@ async def test_new_prompt_keeps_running_job_and_supersedes_queued_jobs(client):
 
 
 @pytest.mark.asyncio
+async def test_cancel_generation_removes_active_job_from_wall(client):
+    http, storage = client
+    wall = await create_wall(http)
+    path = f"/api/v1/walls/{wall['id']}/generations"
+    headers = {"X-Wall-Capability": wall["capability"]}
+    created = (await http.post(path, headers=headers, data={"prompt": "A blocked gate"})).json()
+
+    response = await http.delete(f"{path}/{created['id']}", headers=headers)
+
+    assert response.status_code == 204
+    listing = (await http.get(path, headers=headers)).json()["items"]
+    assert listing == []
+    async with storage.sessions() as session:
+        job = await session.scalar(select(GenerationJob).where(GenerationJob.id == uuid.UUID(created["id"])))
+    assert job.status == JobStatus.cancelled
+    assert job.error_code == "job_cancelled"
+    api.event_bus.publish.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_prune_queue_cancels_all_active_wall_jobs(client):
+    http, storage = client
+    wall = await create_wall(http)
+    path = f"/api/v1/walls/{wall['id']}/generations"
+    headers = {"X-Wall-Capability": wall["capability"]}
+    response = await http.post(path, headers=headers, data={"prompt": "Queue to prune", "count": 3})
+    assert response.status_code == 202
+    async with storage.sessions() as session:
+        jobs = (
+            await session.scalars(select(GenerationJob).where(GenerationJob.wall_id == uuid.UUID(wall["id"])))
+        ).all()
+        jobs[0].status = JobStatus.running
+        await session.commit()
+
+    prune = await http.delete(f"{path}/queue", headers=headers)
+
+    assert prune.status_code == 200
+    assert prune.json()["cancelled"] == 3
+    listing = (await http.get(path, headers=headers)).json()["items"]
+    assert listing == []
+    async with storage.sessions() as session:
+        statuses = (
+            await session.scalars(select(GenerationJob.status).where(GenerationJob.wall_id == uuid.UUID(wall["id"])))
+        ).all()
+    assert statuses == [JobStatus.cancelled, JobStatus.cancelled, JobStatus.cancelled]
+
+
+@pytest.mark.asyncio
 async def test_save_promotes_result_to_persistent_library_idempotently(client):
     http, storage = client
     wall = await create_wall(http)

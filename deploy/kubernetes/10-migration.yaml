@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: asgardian-migrate-0-4-0
+  name: asgardian-migrate-0-4-2
   namespace: asgardian
 spec:
   backoffLimit: 4
@@ -19,7 +19,7 @@ spec:
         asgardian.io/runtime: "true"
       containers:
         - name: migrate
-          image: ghcr.io/example/asgardian-backend:0.4.0-arm64
+          image: ghcr.io/example/asgardian-backend:0.4.2-arm64
           imagePullPolicy: IfNotPresent
           command: ["asgardian-migrate"]
           envFrom: [{ secretRef: { name: asgardian-runtime } }]

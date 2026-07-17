@@ -12,6 +12,11 @@ button { color: inherit; }
 .session-state { justify-self: end; }
 .session-state i { width: 7px; height: 7px; border-radius: 50%; background: #884a4a; }
 .session-state i.online { background: #7ac99b; box-shadow: 0 0 12px #7ac99b; }
+.topbar-actions { justify-self: end; display: flex; align-items: center; gap: 10px; }
+.prune-queue { display: flex; align-items: center; gap: 7px; border: 1px solid rgba(205,91,91,.32); border-radius: 99px; padding: 7px 10px 7px 12px; color: #e7b0b0; background: rgba(118,42,42,.18); cursor: pointer; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.prune-queue:hover:not(:disabled) { color: #fff; border-color: rgba(224,100,100,.55); background: rgba(149,49,49,.34); }
+.prune-queue:disabled { opacity: .32; cursor: default; }
+.prune-queue b { min-width: 17px; padding: 2px 5px; border-radius: 99px; color: #f4dede; background: rgba(0,0,0,.28); font-size: 9px; text-align: center; }
 .wall-nav { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255,255,255,.045); }
 .wall-nav button { border: 0; border-radius: 9px; padding: 7px 12px; color: #7f8895; background: transparent; cursor: pointer; font-size: 11px; letter-spacing: .04em; }
 .wall-nav button.active { color: #f7f3eb; background: rgba(255,255,255,.1); }
@@ -32,6 +37,7 @@ button { color: inherit; }
 .tile-overlay { position: absolute; inset: auto 0 0; padding: 70px 12px 12px; opacity: 0; transform: translateY(10px); transition: .2s ease; background: linear-gradient(transparent,rgba(4,6,9,.88)); }
 .tile:hover .tile-overlay, .tile.failed .tile-overlay { opacity: 1; transform: none; }
 .tile-overlay button { border: 1px solid rgba(255,255,255,.25); border-radius: 99px; padding: 7px 12px; background: rgba(255,255,255,.08); cursor: pointer; font-size: 11px; }
+.tile-overlay button:disabled { opacity: .42; cursor: default; }
 .tile-actions { display: flex; gap: 7px; }
 .tile-actions button.saved { color: #8ed5aa; border-color: rgba(122,201,155,.45); cursor: default; }
 .tile-actions button.danger { margin-left: auto; color: #e9a2a2; border-color: rgba(205,91,91,.38); }

@@ -26,7 +26,7 @@ spec:
       securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
       containers:
         - name: api
-          image: ghcr.io/example/asgardian-backend:0.4.0-arm64
+          image: ghcr.io/example/asgardian-backend:0.4.2-arm64
           imagePullPolicy: IfNotPresent
           command: ["asgardian-api"]
           env: [{ name: ASGARDIAN_REDIS_URL, value: "redis://asgardian-redis:6379/0" }]
@@ -76,7 +76,7 @@ spec:
       securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
       containers:
         - name: worker
-          image: ghcr.io/example/asgardian-backend:0.4.0-arm64
+          image: ghcr.io/example/asgardian-backend:0.4.2-arm64
           imagePullPolicy: IfNotPresent
           command: ["asgardian-worker"]
           env: [{ name: ASGARDIAN_REDIS_URL, value: "redis://asgardian-redis:6379/0" }]
@@ -110,7 +110,7 @@ spec:
       securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
       containers:
         - name: reconciler
-          image: ghcr.io/example/asgardian-backend:0.4.0-arm64
+          image: ghcr.io/example/asgardian-backend:0.4.2-arm64
           imagePullPolicy: IfNotPresent
           command: ["asgardian-reconciler"]
           env: [{ name: ASGARDIAN_REDIS_URL, value: "redis://asgardian-redis:6379/0" }]
@@ -152,7 +152,7 @@ spec:
       securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
       containers:
         - name: web
-          image: ghcr.io/example/asgardian-web:0.4.1-arm64
+          image: ghcr.io/example/asgardian-web:0.4.2-arm64
           imagePullPolicy: IfNotPresent
           ports: [{ name: http, containerPort: 8080 }]
           readinessProbe: { httpGet: { path: /, port: http }, initialDelaySeconds: 3, periodSeconds: 5 }

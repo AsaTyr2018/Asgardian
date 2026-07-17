@@ -107,6 +107,25 @@ export async function saveGeneration(wall: Wall, generation: Generation): Promis
   ).then((response) => response.json());
 }
 
+export async function cancelGeneration(wall: Wall, generation: Generation): Promise<void> {
+  await checked(
+    await fetch(`/api/v1/walls/${wall.id}/generations/${generation.id}`, {
+      method: "DELETE",
+      headers: { "X-Wall-Capability": wall.capability },
+    }),
+  );
+}
+
+export async function pruneQueue(wall: Wall): Promise<number> {
+  const response = await checked(
+    await fetch(`/api/v1/walls/${wall.id}/generations/queue`, {
+      method: "DELETE",
+      headers: { "X-Wall-Capability": wall.capability },
+    }),
+  );
+  return (await response.json()).cancelled;
+}
+
 export async function listSavedAssets(): Promise<SavedAsset[]> {
   return checked(await fetch("/api/v1/library", { cache: "no-store" }))
     .then(async (response) => (await response.json()).items);

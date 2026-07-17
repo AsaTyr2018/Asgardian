@@ -6,8 +6,8 @@ outside the cluster and push them to a private registry.
 
 Example image targets:
 
-- `ghcr.io/example/asgardian-backend:0.4.0-arm64`
-- `ghcr.io/example/asgardian-web:0.4.1-arm64`
+- `ghcr.io/example/asgardian-backend:0.4.2-arm64`
+- `ghcr.io/example/asgardian-web:0.4.2-arm64`
 
 `registry-push-job.yaml` builds from a minimal source bundle and pushes directly
 to a configured registry. The bundle must contain only the files required for a

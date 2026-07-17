@@ -71,7 +71,7 @@ async def lifespan(_: FastAPI):
         await event_bus.close()
 
 
-app = FastAPI(title="Asgardian API", version="0.4.0", lifespan=lifespan)
+app = FastAPI(title="Asgardian API", version="0.4.2", lifespan=lifespan)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
 app.add_middleware(
     CORSMiddleware,
@@ -239,6 +239,32 @@ async def list_generations(
     return GenerationList(items=[view_for(job, wall) for job in jobs])
 
 
+@app.delete("/api/v1/walls/{wall_id}/generations/queue")
+async def prune_generation_queue(
+    wall_id: uuid.UUID,
+    session: AsyncSession = Depends(session_dependency),
+    capability: str | None = Header(default=None, alias=CAPABILITY_HEADER),
+) -> dict[str, int]:
+    await verify_wall(wall_id, session, capability)
+    result = await session.execute(
+        update(GenerationJob)
+        .where(
+            GenerationJob.wall_id == wall_id,
+            GenerationJob.status.in_((JobStatus.queued, JobStatus.running)),
+        )
+        .values(
+            status=JobStatus.cancelled,
+            error_code="queue_pruned",
+            error_message="Cancelled by queue prune",
+            completed_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+    )
+    await session.commit()
+    await event_bus.publish("wall.changed", wall_id)
+    return {"cancelled": result.rowcount or 0}
+
+
 @app.get("/api/v1/walls/{wall_id}/generations/{job_id}", response_model=GenerationView)
 async def get_generation(
     wall_id: uuid.UUID,
@@ -255,6 +281,29 @@ async def get_generation(
     if job is None:
         raise HTTPException(status_code=404, detail="generation not found")
     return view_for(job, wall)
+
+
+@app.delete("/api/v1/walls/{wall_id}/generations/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def cancel_generation(
+    wall_id: uuid.UUID,
+    job_id: uuid.UUID,
+    session: AsyncSession = Depends(session_dependency),
+    capability: str | None = Header(default=None, alias=CAPABILITY_HEADER),
+) -> None:
+    await verify_wall(wall_id, session, capability)
+    job = await session.scalar(
+        select(GenerationJob).where(GenerationJob.id == job_id, GenerationJob.wall_id == wall_id)
+    )
+    if job is None:
+        raise HTTPException(status_code=404, detail="generation not found")
+    if job.status not in (JobStatus.queued, JobStatus.running):
+        raise HTTPException(status_code=409, detail="only queued or running generations can be cancelled")
+    job.status = JobStatus.cancelled
+    job.error_code = "job_cancelled"
+    job.error_message = "Cancelled by user"
+    job.completed_at = datetime.now(UTC)
+    await session.commit()
+    await event_bus.publish("wall.changed", wall_id)
 
 
 @app.get("/api/v1/walls/{wall_id}/generations/{job_id}/asset")

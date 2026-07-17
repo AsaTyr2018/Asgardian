@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: asgardian-build-0-4-0
+  name: asgardian-build-0-4-2
   namespace: asgardian
 spec:
   backoffLimit: 1
@@ -59,14 +59,14 @@ spec:
                 --local dockerfile=/workspace/source \
                 --opt filename=Dockerfile.backend \
                 --opt platform=linux/arm64 \
-                --output type=docker,name=asgardian-backend:0.4.0-arm64,dest=/workspace/out/backend.tar
+                --output type=docker,name=asgardian-backend:0.4.2-arm64,dest=/workspace/out/backend.tar
               buildctl-daemonless.sh build \
                 --frontend dockerfile.v0 \
                 --local context=/workspace/source \
                 --local dockerfile=/workspace/source \
                 --opt filename=Dockerfile.web \
                 --opt platform=linux/arm64 \
-                --output type=docker,name=asgardian-web:0.4.1-arm64,dest=/workspace/out/web.tar
+                --output type=docker,name=asgardian-web:0.4.2-arm64,dest=/workspace/out/web.tar
           env:
             - name: BUILDKITD_FLAGS
               value: --oci-worker-no-process-sandbox

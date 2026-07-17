@@ -4,10 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "asgardian"
-version = "0.4.0"
+version = "0.4.2"
 description = "Single-user LAN image and native video generation wall backed by ComfyUI"
 requires-python = ">=3.12"
-license = "PolyForm-Noncommercial-1.0.0"
 dependencies = [
   "alembic>=1.16,<2",
   "boto3>=1.40,<2",
