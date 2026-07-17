@@ -1,0 +1,23 @@
+.env
+.secret/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+node_modules/
+dist/
+coverage/
+*.log
+docs/
+
+# Plaintext infrastructure secrets and private certificate material.
+docs/s3.txt
+docs/SSL_all.zip
+
+# Test and diagnostic images are intentionally local project artifacts.
+docs/test/**/*.png
+docs/test/**/*.jpg
+docs/test/**/*.jpeg

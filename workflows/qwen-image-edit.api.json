@@ -1,0 +1,134 @@
+﻿{
+    "1":  {
+              "_meta":  {
+                            "title":  "CheckpointLoaderSimple"
+                        },
+              "class_type":  "CheckpointLoaderSimple",
+              "inputs":  {
+                             "ckpt_name":  "Qwen-Rapid-AIO-NSFW-v23.safetensors"
+                         }
+          },
+    "2":  {
+              "_meta":  {
+                            "title":  "LoadImage"
+                        },
+              "class_type":  "LoadImage",
+              "inputs":  {
+                             "image":  "${SOURCE_IMAGE}",
+                             "upload":  "image"
+                         }
+          },
+    "3":  {
+              "_meta":  {
+                            "title":  "EmptyLatentImage"
+                        },
+              "class_type":  "EmptyLatentImage",
+              "inputs":  {
+                             "batch_size":  1,
+                             "height":  "${HEIGHT}",
+                             "width":  "${WIDTH}"
+                         }
+          },
+    "4":  {
+              "_meta":  {
+                            "title":  "TextEncodeQwenImageEditPlus"
+                        },
+              "class_type":  "TextEncodeQwenImageEditPlus",
+              "inputs":  {
+                             "clip":  [
+                                          "1",
+                                          1
+                                      ],
+                             "image1":  [
+                                            "2",
+                                            0
+                                        ],
+                             "prompt":  "${PROMPT}",
+                             "target_latent":  [
+                                                   "3",
+                                                   0
+                                               ],
+                             "vae":  [
+                                         "1",
+                                         2
+                                     ]
+                         }
+          },
+    "5":  {
+              "_meta":  {
+                            "title":  "TextEncodeQwenImageEditPlus"
+                        },
+              "class_type":  "TextEncodeQwenImageEditPlus",
+              "inputs":  {
+                             "clip":  [
+                                          "1",
+                                          1
+                                      ],
+                             "prompt":  "${NEGATIVE_PROMPT}",
+                             "vae":  [
+                                         "1",
+                                         2
+                                     ]
+                         }
+          },
+    "6":  {
+              "_meta":  {
+                            "title":  "KSampler"
+                        },
+              "class_type":  "KSampler",
+              "inputs":  {
+                             "cfg":  1.0,
+                             "control_after_generate":  "fixed",
+                             "denoise":  1.0,
+                             "latent_image":  [
+                                                  "3",
+                                                  0
+                                              ],
+                             "model":  [
+                                           "1",
+                                           0
+                                       ],
+                             "negative":  [
+                                              "5",
+                                              0
+                                          ],
+                             "positive":  [
+                                              "4",
+                                              0
+                                          ],
+                             "sampler_name":  "sa_solver",
+                             "scheduler":  "beta",
+                             "seed":  "${SEED}",
+                             "steps":  8
+                         }
+          },
+    "7":  {
+              "_meta":  {
+                            "title":  "VAEDecode"
+                        },
+              "class_type":  "VAEDecode",
+              "inputs":  {
+                             "samples":  [
+                                             "6",
+                                             0
+                                         ],
+                             "vae":  [
+                                         "1",
+                                         2
+                                     ]
+                         }
+          },
+    "8":  {
+              "_meta":  {
+                            "title":  "SaveImage"
+                        },
+              "class_type":  "SaveImage",
+              "inputs":  {
+                             "filename_prefix":  "${OUTPUT_PREFIX}",
+                             "images":  [
+                                            "7",
+                                            0
+                                        ]
+                         }
+          }
+}

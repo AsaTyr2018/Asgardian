@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "asgardian"
+version = "0.4.0"
+description = "Single-user LAN image and native video generation wall backed by ComfyUI"
+requires-python = ">=3.12"
+license = "PolyForm-Noncommercial-1.0.0"
+dependencies = [
+  "alembic>=1.16,<2",
+  "boto3>=1.40,<2",
+  "fastapi>=0.116,<1",
+  "httpx>=0.28,<1",
+  "pillow>=11,<13",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic-settings>=2.10,<3",
+  "python-multipart>=0.0.20,<1",
+  "redis>=6.4,<7",
+  "sqlalchemy>=2.0.41,<3",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "aiosqlite>=0.21,<1",
+  "pytest>=8.4,<9",
+  "pytest-asyncio>=1.1,<2",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+asgardian-api = "asgardian.api:run"
+asgardian-worker = "asgardian.worker:run"
+asgardian-reconciler = "asgardian.reconciler:run"
+asgardian-migrate = "asgardian.migrate:run"
+asgardian-cleanup = "asgardian.cleanup:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/asgardian"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008"]

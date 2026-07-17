@@ -1,0 +1,102 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: asgardian-registry-push-0-4-0
+  namespace: asgardian
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: asgardian
+        app.kubernetes.io/component: registry-push
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/buildkit: unconfined
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        asgardian.io/build: "true"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: Unconfined
+      initContainers:
+        - name: unpack-source
+          image: busybox:1.37.0
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              rm -rf /workspace/registry-source
+              mkdir -p /workspace/registry-source
+              tar -xzf /bundle/source.tgz -C /workspace/registry-source
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits: { cpu: 100m, memory: 96Mi }
+          volumeMounts:
+            - { name: source, mountPath: /bundle, readOnly: true }
+            - { name: workspace, mountPath: /workspace }
+      containers:
+        - name: buildkit
+          image: moby/buildkit:v0.31.1-rootless
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-lc"]
+          args:
+            - |
+              buildctl-daemonless.sh build \
+                --frontend dockerfile.v0 \
+                --local context=/workspace/registry-source \
+                --local dockerfile=/workspace/registry-source \
+                --opt filename=Dockerfile.backend \
+                --opt platform=linux/arm64 \
+                --output type=image,name=ghcr.io/example/asgardian-backend:0.4.0-arm64,push=true
+              buildctl-daemonless.sh build \
+                --frontend dockerfile.v0 \
+                --local context=/workspace/registry-source \
+                --local dockerfile=/workspace/registry-source \
+                --opt filename=Dockerfile.web \
+                --opt platform=linux/arm64 \
+                --output type=image,name=ghcr.io/example/asgardian-web:0.4.1-arm64,push=true
+          env:
+            - name: BUILDKITD_FLAGS
+              value: --oci-worker-no-process-sandbox
+            - name: DOCKER_CONFIG
+              value: /home/user/.docker
+          resources:
+            requests: { cpu: 250m, memory: 512Mi }
+            limits: { cpu: "1", memory: 1536Mi }
+          securityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              add: ["SETUID", "SETGID"]
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: workspace, mountPath: /workspace }
+            - { name: buildkit-state, mountPath: /home/user/.local/share/buildkit }
+            - { name: docker-config, mountPath: /home/user/.docker, readOnly: true }
+      volumes:
+        - name: source
+          configMap:
+            name: asgardian-registry-source
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: asgardian-build-workspace
+        - name: buildkit-state
+          emptyDir:
+            sizeLimit: 4Gi
+        - name: docker-config
+          secret:
+            secretName: asgardian-registry
+            items:
+              - key: .dockerconfigjson
+                path: config.json

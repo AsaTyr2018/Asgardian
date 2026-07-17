@@ -1,0 +1,21 @@
+# Reusable PodSpec fragments. Merge one fragment into the corresponding
+# workload; this file is documentation and is not a standalone Kubernetes object.
+appWorkload:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+
+buildWorkload:
+  nodeSelector:
+    asgardian.io/build: "true"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist

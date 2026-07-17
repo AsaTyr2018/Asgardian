@@ -1,0 +1,68 @@
+backendImage:
+  repository: ghcr.io/example/asgardian-backend
+  tag: "0.4.0-arm64"
+  pullPolicy: IfNotPresent
+
+webImage:
+  repository: ghcr.io/example/asgardian-web
+  tag: "0.4.1-arm64"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: asgardian-registry
+
+postgres:
+  image: postgres:17-alpine
+  storageClass: standard
+  storage: 5Gi
+  database: asgardian
+  username: asgardian
+  password: ""
+
+redis:
+  image: redis:8.2-alpine
+  storageClass: standard
+  storage: 1Gi
+  maxMemory: 192mb
+
+config:
+  redisUrl: redis://asgardian-redis:6379/0
+  engineRoutingMode: solo
+  comfyUrl: http://comfyui-engine:8188
+  comfyImageUrl: ""
+  comfyVideoUrl: ""
+  comfyEngineAddress: 203.0.113.10
+  s3Endpoint: https://s3.example.local
+  s3Bucket: artefacts
+  s3TlsVerify: "false"
+  s3AccessKey: ""
+  s3SecretKey: ""
+  allowedHosts: asgardian.example.local,asgardian-web,localhost
+  allowedOrigins: http://asgardian.example.local
+  wallTtlSeconds: 86400
+
+cleanup:
+  enabled: true
+  schedule: "*/10 * * * *"
+  batchSize: 100
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+
+ingress:
+  enabled: true
+  className: traefik
+  host: asgardian.example.local
+
+resources:
+  api:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+  worker:
+    requests: { cpu: 100m, memory: 192Mi }
+    limits: { cpu: "1", memory: 1Gi }
+  reconciler:
+    requests: { cpu: 100m, memory: 192Mi }
+    limits: { cpu: "1", memory: 1Gi }
+  web:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }

@@ -1,0 +1,40 @@
+{
+  "models": [
+    {
+      "name": "Qwen image/edit checkpoint used by the bundled image workflows",
+      "path": "models/checkpoints/Qwen-Rapid-AIO-NSFW-v23.safetensors",
+      "url": "https://huggingface.co/Phr00t/Qwen-Image-Edit-Rapid-AIO/resolve/main/v23/Qwen-Rapid-AIO-NSFW-v23.safetensors?download=true",
+      "required": true
+    },
+    {
+      "name": "LTX 2.3 checkpoint for saved-image-to-video workflows",
+      "path": "models/checkpoints/ltx2310eros_v1_FP8.safetensors",
+      "url": "https://civitai.red/api/download/models/2892069?format=SafeTensor&fp=fp8&size=full&type=Model",
+      "required": false
+    },
+    {
+      "name": "LTX 2.3 distilled LoRA",
+      "path": "models/loras/ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+      "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-lora-384-1.1.safetensors?download=true",
+      "required": false
+    },
+    {
+      "name": "LTX 2.3 60 FPS motion LoRA",
+      "path": "models/loras/ltx-2-3-60-fps-buttery-smooth-motion-lora-ltx-2-3-.safetensors",
+      "url": "https://huggingface.co/kirk86413/bigfps/resolve/main/LTX%202.3%20_60%20FPS_Buttery_Smooth%20Motion_LoRa.safetensors",
+      "required": false
+    },
+    {
+      "name": "Gemma text encoder used by the LTX workflow",
+      "path": "models/text_encoders/gemma_3_12B_it_fp8_e4m3fn.safetensors",
+      "url": "https://huggingface.co/GitMylo/LTX-2-comfy_gemma_fp8_e4m3fn/resolve/main/gemma_3_12B_it_fp8_e4m3fn.safetensors?download=true",
+      "required": false
+    },
+    {
+      "name": "LTX 2.3 spatial upscaler",
+      "path": "models/upscale_models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+      "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors?download=true",
+      "required": false
+    }
+  ]
+}

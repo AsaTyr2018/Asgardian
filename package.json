@@ -1,0 +1,15 @@
+{
+  "name": "asgardian",
+  "private": true,
+  "version": "0.4.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "workspaces": ["apps/web"],
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  },
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "test:web": "npm --workspace apps/web run test"
+  }
+}

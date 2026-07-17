@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: asgardian-transient-cleanup
+  namespace: asgardian
+spec:
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      template:
+        metadata:
+          labels: { app.kubernetes.io/name: asgardian, app.kubernetes.io/component: cleanup }
+        spec:
+          restartPolicy: Never
+          nodeSelector: { asgardian.io/runtime: "true" }
+          imagePullSecrets:
+            - name: asgardian-registry
+          securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+          containers:
+            - name: cleanup
+              image: ghcr.io/example/asgardian-backend:0.4.0-arm64
+              imagePullPolicy: IfNotPresent
+              command: ["asgardian-cleanup"]
+              envFrom: [{ secretRef: { name: asgardian-runtime } }]
+              env:
+                - { name: ASGARDIAN_WALL_TTL_SECONDS, value: "86400" }
+                - { name: ASGARDIAN_CLEANUP_BATCH_SIZE, value: "100" }
+              resources:
+                requests: { cpu: 20m, memory: 64Mi }
+                limits: { cpu: 150m, memory: 192Mi }
+              securityContext: { allowPrivilegeEscalation: false, capabilities: { drop: ["ALL"] }, readOnlyRootFilesystem: true }

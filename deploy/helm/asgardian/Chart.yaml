@@ -1,0 +1,6 @@
+apiVersion: v2
+name: asgardian
+description: Asgardian single-user LAN generation wall
+type: application
+version: 0.4.0
+appVersion: "0.4.0"
