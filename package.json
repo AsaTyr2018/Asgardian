@@ -4,7 +4,7 @@
   "version": "0.4.2",
   "workspaces": ["apps/web"],
   "devDependencies": {
-    "jsdom": "26.1.0"
+    "jsdom": "29.1.1"
   },
   "scripts": {
     "dev:web": "npm --workspace apps/web run dev",
